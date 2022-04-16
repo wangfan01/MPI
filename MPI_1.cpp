@@ -7,21 +7,21 @@
 
 using namespace std;
 #define TOTAL_SIZE 500000
-#define task_count 100 //×ÜÈÎÎñ·ÖÎª10¸öĞ¡°ü
-#define Size TOTAL_SIZE/task_count  //Ã¿¸öĞ¡°üµÄsize
+#define task_count 100 //æ€»ä»»åŠ¡åˆ†ä¸º10ä¸ªå°åŒ…
+#define Size TOTAL_SIZE/task_count  //æ¯ä¸ªå°åŒ…çš„size
 int compare(const void* a, const void* b)
 {
 	return *(int*)a - *(int*)b;
 }
 void merge__(int* nums1, int m, int* nums2, int n) {
-	int p = m - 1;      // p Ö¸Ïò nums1[m - 1]
-	int q = n - 1;      // q Ö¸Ïò nums2[n - 1]
-	int k = m + n - 1;  // k Ö¸Ïò nums1[m + n - 1]
+	int p = m - 1;      // p æŒ‡å‘ nums1[m - 1]
+	int q = n - 1;      // q æŒ‡å‘ nums2[n - 1]
+	int k = m + n - 1;  // k æŒ‡å‘ nums1[m + n - 1]
 	while (p >= 0 && q >= 0) {
 		nums1[k--] = nums1[p] > nums2[q] ? nums1[p--] : nums2[q--];
 	}
 
-	/* Èô n > m£¬nums1 ±éÀúÍê³É£¬½« nums2 ÖĞÉĞÎ´±éÀúÍêµÄÔªËØ¿½±´µ½ nums1 ÖĞ */
+	/* è‹¥ n > mï¼Œnums1 éå†å®Œæˆï¼Œå°† nums2 ä¸­å°šæœªéå†å®Œçš„å…ƒç´ æ‹·è´åˆ° nums1 ä¸­ */
 	while (q >= 0) {
 		nums1[k--] = nums2[q--];
 	}
@@ -40,10 +40,10 @@ int main(int argc, char* argv[])
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &process_num);
 	int namelen;
-	char processor_name[MPI_MAX_PROCESSOR_NAME];//Éè±¸Ãû
+	char processor_name[MPI_MAX_PROCESSOR_NAME];//è®¾å¤‡å
 	MPI_Get_processor_name(processor_name, &namelen);
 
-	int key = world_rank;//ÔÚÍ¨ĞÅÓòÖĞÅÅĞòÓÃµÄ
+	int key = world_rank;//åœ¨é€šä¿¡åŸŸä¸­æ’åºç”¨çš„
 	int color = 0;
 	if (processor_name == "master0")
 	{
@@ -62,10 +62,10 @@ int main(int argc, char* argv[])
 		color = 1;
 	}
 	int sub_array[Size + 1];
-	vector<int> task;//ÈÎÎñ³ØÖĞÈÎÎñºÅ
-	vector<int> ended_task;//ÒÑ¾­Íê³ÉµÄÈÎÎñºÅ
+	vector<int> task;//ä»»åŠ¡æ± ä¸­ä»»åŠ¡å·
+	vector<int> ended_task;//å·²ç»å®Œæˆçš„ä»»åŠ¡å·
 	int task_data[task_count][Size + 1];
-	int end_array[Size + 1];//½áÊøÊı×é
+	int end_array[Size + 1];//ç»“æŸæ•°ç»„
 	int length = 0;
 
 
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 			ended_task.push_back(i);
 		}
 		task.push_back(0);
-		//cout << "Ô­Ê¼Êı¾İ£º" << endl;
+		//cout << "åŸå§‹æ•°æ®ï¼š" << endl;
 		for (int i = 0; i < task_count; i++)
 		{
 			for (int j = 0; j < Size; j++)
@@ -95,8 +95,8 @@ int main(int argc, char* argv[])
 				//original_array[i* Size+j] = rand() % TOTAL_SIZE;
 				task_data[i][j] = rand() % TOTAL_SIZE;
 				//cout << task_data[i][j] << " ";
-			}//½«Ò»Î¬Êı×é»¯Îª¶şÎ¬Êı×é ±ä³ÉĞèÒªµÄÈÎÎñ³Ø
-			task_data[i][Size] = i;//×îºóÒ»Î»ÎªÈÎÎñºÅ
+			}//å°†ä¸€ç»´æ•°ç»„åŒ–ä¸ºäºŒç»´æ•°ç»„ å˜æˆéœ€è¦çš„ä»»åŠ¡æ± 
+			task_data[i][Size] = i;//æœ€åä¸€ä½ä¸ºä»»åŠ¡å·
 			//original_array[i * Size + Size] = i;
 			//cout << task_data[i][Size];
 			//cout << endl;
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 		{
 			MPI_Recv(sub_array, Size + 1, MPI_INT, MPI_ANY_SOURCE, 0, SplitWorld, &status);
 			//auto iter = std::remove(ended_task.begin(), ended_task.end(), sub_array[Size]);
-			ended_task.erase(remove(ended_task.begin(), ended_task.end(), sub_array[Size]), ended_task.end());//É¾³ıÒÑ¾­Íê³ÉµÄÈÎÎñ
+			ended_task.erase(remove(ended_task.begin(), ended_task.end(), sub_array[Size]), ended_task.end());//åˆ é™¤å·²ç»å®Œæˆçš„ä»»åŠ¡
 			merge__(sorted_array, length, sub_array, Size);
 			length = length + Size;
 			//for (int temp = 0; temp <= Size; temp++)
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 				int m = task[0];
 				MPI_Send(task_data[m], Size + 1, MPI_INT, status.MPI_SOURCE, 20, SplitWorld);
 				//iter = std::remove(task.begin(), task.end(), task_data[m][Size]);
-				task.erase(remove(task.begin(), task.end(), task_data[m][Size]), task.end());//É¾³ıÒÑ¾­·¢ËÍµÄÈÎÎñ
+				task.erase(remove(task.begin(), task.end(), task_data[m][Size]), task.end());//åˆ é™¤å·²ç»å‘é€çš„ä»»åŠ¡
 			}
 			else
 			{
