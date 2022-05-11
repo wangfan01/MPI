@@ -45,23 +45,41 @@ int main(int argc, char* argv[])
 	MPI_Get_processor_name(processor_name, &namelen);
 
 	int key = world_rank;//在通信域中排序用的
-	int color = 0;
-	if (processor_name == "master0")
+	int color=0;
+	const char* name = "master0";
+	if (!abs(strcmp(processor_name, name)))
 	{
 		color = 0;
 	}
-	if (processor_name == "master1")
+	const char* name0 = "master1";
+	if (!abs(strcmp(processor_name, name0)))
 	{
 		color = 1;
 	}
-	if (processor_name == "node1" || processor_name == "node2")
+	const char* name1 = "node1";
+	const char* name2 = "node2";
+	if (!abs(strcmp(processor_name, name1)))
 	{
 		color = 0;
 	}
-	if (processor_name == "node3" || processor_name == "node4")
+	if (!abs(strcmp(processor_name, name2)))
+	{
+		color = 0;
+	}
+	const char* name3 = "node3";
+	const char* name4 = "node4";
+	if (!abs(strcmp(processor_name, name3)))
 	{
 		color = 1;
 	}
+	if (!abs(strcmp(processor_name, name4)))
+	{
+		color = 1;
+	}
+	
+	cout<<"color:"<<color<<",world_rank:"<<world_rank<<",name:"<<processor_name<<endl;
+	
+	
 	int sub_array[Size + 1];
 	vector<int> task;//任务池中任务号
 	vector<int> ended_task;//已经完成的任务号
