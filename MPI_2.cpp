@@ -126,15 +126,12 @@ int main(int argc, char* argv[])
 	{
 		while (!ended_task.empty())
 		{
-
 			if (task.empty())
 			{
 				sleep(3);
-				
 				for (int i = 1; i < row_size; i++)
 				{
 					MPI_Iprobe(i, 0, SplitWorld, &flag, &status);
-					//cout << "jiedian:" << i << " flag:" << flag << endl;
 					if (flag == 1)
 					{
 						MPI_Recv(sub_array, Size + 1, MPI_INT, MPI_ANY_SOURCE, 0, SplitWorld, &status);
@@ -143,13 +140,11 @@ int main(int argc, char* argv[])
 						length = length + Size;
 					}
 					MPI_Isend(end_array, Size + 1, MPI_INT, i, 20, SplitWorld,&request);
-					
 				}
 				int m;
 				for (int i = 0; i < ended_task.size(); i++)
 				{
 					m = ended_task[0];
-					//cout << m;
 					qsort(task_data[m], Size, sizeof(int), compare);
 					merge__(sorted_array, length, task_data[m], Size);
 					length = length + Size;
@@ -162,13 +157,9 @@ int main(int argc, char* argv[])
 				ended_task.erase(remove(ended_task.begin(), ended_task.end(), sub_array[Size]), ended_task.end());//删除已经完成的任务
 				merge__(sorted_array, length, sub_array, Size);
 				length = length + Size;
-
-
 				int m = task[0];
 				MPI_Isend(task_data[m], Size + 1, MPI_INT, status.MPI_SOURCE, 20, SplitWorld,&request);
 				task.erase(remove(task.begin(), task.end(), task_data[m][Size]), task.end());//删除已经发送的任务
-				//process.push_back(status.MPI_SOURCE);
-				//unfinished_task.push_back(task_data[m][Size]);
 			}
 		}
 	}
