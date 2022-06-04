@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 	MPI_Comm_size(SplitWorld, &row_size);
 	cout<<"color"<<color<<",world_rank"<<world_rank<<",row_rank"<<row_rank<<",name"<<processor_name<<endl;
 
-	//int test[39] = { 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36 ,37,38,39};
+
 	if (row_rank == 0)
 	{
 		for (int i = 0; i < task_count; i++)
@@ -109,22 +109,16 @@ int main(int argc, char* argv[])
 		{
 			for (int j = 0; j < Size; j++)
 			{
-				//original_array[i* Size+j] = rand() % TOTAL_SIZE;
 				task_data[i][j] = rand() % TOTAL_SIZE;
-				//cout << task_data[i][j] << " ";
 			}//将一维数组化为二维数组 变成需要的任务池
 			task_data[i][Size] = i;//最后一位为任务号
-			//original_array[i * Size + Size] = i;
-			//cout << task_data[i][Size];
-			//cout << endl;
 		}
-		//cout << "**********************************************" << endl;
 		for (int k = 0; k < Size + 1; k++)
 		{
 			end_array[k] = -1;
 		}
 	}
-	//cout << row_rank << ' ' << world_rank << endl;
+
 	MPI_Scatter(task_data, Size + 1, MPI_INT, sub_array, Size + 1, MPI_INT, 0, SplitWorld);
 
 	int flag = 999;
@@ -132,22 +126,11 @@ int main(int argc, char* argv[])
 	{
 		while (!ended_task.empty())
 		{
-			//for (int i = 0; i < ended_task.size(); i++)
-			//{
-			//	cout << ended_task[i];
-			//}
-			//cout << endl;
+
 			if (task.empty())
 			{
 				sleep(3);
-				//if (world_rank == 0)
-				//{
-				//	for (int i = 0; i < ended_task.size(); i++)
-				//	{
-				//		cout << ended_task[i] << ",";
-				//	}
-				//	cout << endl;
-				//}
+				
 				for (int i = 1; i < row_size; i++)
 				{
 					MPI_Iprobe(i, 0, SplitWorld, &flag, &status);
@@ -192,19 +175,13 @@ int main(int argc, char* argv[])
 	if (row_rank != 0)
 	{
 		while (1) {
-			//for (int k = 0; k < Size + 1; k++)
-			//	cout << sub_array[k] << " ";
-			//cout << "world " << world_rank << " row " << row_rank << endl;
-
-			//paixu
+			//排序
 			qsort(sub_array, Size, sizeof(int), compare);
 			MPI_Send(sub_array, Size + 1, MPI_INT, 0, 0, SplitWorld);
 			MPI_Recv(sub_array, Size + 1, MPI_INT, 0, 20, SplitWorld, &status);
 			if (sub_array[Size] == -1)
 				break;
-			//for (int k = 0; k < Size + 1; k++)
-			//	cout << sub_array[k] << " ";
-			//cout << world_rank << endl;
+
 		}
 	}
 	cout<<endl;
