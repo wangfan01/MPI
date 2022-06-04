@@ -1,14 +1,15 @@
 #include<iostream>
-#include<windows.h>
-//#include <unistd.h>
+//#include<windows.h>
+#include <unistd.h>
 #include<mpi.h>
 #include<vector>
 #include <algorithm>
 #include <ctime>
 #include <fstream>
+#include<string.h>
 using namespace std;
-#define TOTAL_SIZE 50000
-#define task_count 100 //总任务分为10个小包
+#define TOTAL_SIZE 500000
+#define task_count 1000 //总任务分为10个小包
 #define Size TOTAL_SIZE/task_count  //每个小包的size
 int compare(const void* a, const void* b)
 {
@@ -76,10 +77,7 @@ int main(int argc, char* argv[])
 	{
 		color = 1;
 	}
-	
 	cout<<"color:"<<color<<",world_rank:"<<world_rank<<",name:"<<processor_name<<endl;
-	
-	
 	int sub_array[Size + 1];
 	vector<int> task;//任务池中任务号
 	vector<int> ended_task;//已经完成的任务号
@@ -88,12 +86,12 @@ int main(int argc, char* argv[])
 	int length = 0;
 
 	MPI_Comm SplitWorld;
-	MPI_Comm_split(MPI_COMM_WORLD, world_rank % 2, key, &SplitWorld);
-
+	MPI_Comm_split(MPI_COMM_WORLD, color, key, &SplitWorld);
 	int row_size;
 	int row_rank;
 	MPI_Comm_rank(SplitWorld, &row_rank);
 	MPI_Comm_size(SplitWorld, &row_size);
+	cout<<"color"<<color<<",world_rank"<<world_rank<<",row_rank"<<row_rank<<",name"<<processor_name<<endl;
 
 	//int test[39] = { 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36 ,37,38,39};
 	if (row_rank == 0)
@@ -141,7 +139,7 @@ int main(int argc, char* argv[])
 			//cout << endl;
 			if (task.empty())
 			{
-				Sleep(300);
+				sleep(3);
 				//if (world_rank == 0)
 				//{
 				//	for (int i = 0; i < ended_task.size(); i++)
@@ -161,19 +159,19 @@ int main(int argc, char* argv[])
 						merge__(sorted_array, length, sub_array, Size);
 						length = length + Size;
 					}
-					MPI_Send(end_array, Size + 1, MPI_INT, i, 20, SplitWorld);
+					MPI_Isend(end_array, Size + 1, MPI_INT, i, 20, SplitWorld,&request);
 					
 				}
-				//int m;
-				//for (int i = 0; i < ended_task.size(); i++)
-				//{
-				//	m = ended_task[0];
-				//	cout << m;
-				//	qsort(task_data[m], Size, sizeof(int), compare);
-				//	merge__(sorted_array, length, task_data[m], Size);
-				//	length = length + Size;
-				//	ended_task.erase(remove(ended_task.begin(), ended_task.end(), task_data[m][Size]), ended_task.end());//删除已经完成的任务
-				//}
+				int m;
+				for (int i = 0; i < ended_task.size(); i++)
+				{
+					m = ended_task[0];
+					//cout << m;
+					qsort(task_data[m], Size, sizeof(int), compare);
+					merge__(sorted_array, length, task_data[m], Size);
+					length = length + Size;
+					ended_task.erase(remove(ended_task.begin(), ended_task.end(), task_data[m][Size]), ended_task.end());//删除已经完成的任务
+				}
 			}
 			else
 			{
@@ -184,7 +182,7 @@ int main(int argc, char* argv[])
 
 
 				int m = task[0];
-				MPI_Send(task_data[m], Size + 1, MPI_INT, status.MPI_SOURCE, 20, SplitWorld);
+				MPI_Isend(task_data[m], Size + 1, MPI_INT, status.MPI_SOURCE, 20, SplitWorld,&request);
 				task.erase(remove(task.begin(), task.end(), task_data[m][Size]), task.end());//删除已经发送的任务
 				//process.push_back(status.MPI_SOURCE);
 				//unfinished_task.push_back(task_data[m][Size]);
@@ -209,8 +207,10 @@ int main(int argc, char* argv[])
 			//cout << world_rank << endl;
 		}
 	}
+	cout<<endl;
+	cout << world_rank << endl;
 
-	if (world_rank == 1)
+	if (world_rank != 0&&row_rank==0)
 	{
 		MPI_Send(sorted_array, length, MPI_INT, 0, 30, MPI_COMM_WORLD);
 	}
@@ -218,18 +218,21 @@ int main(int argc, char* argv[])
 	{
 		int temp[TOTAL_SIZE * 2];
 		int num;
-		MPI_Probe(1, 30, MPI_COMM_WORLD, &status);
+		MPI_Probe(MPI_ANY_SOURCE, 30, MPI_COMM_WORLD, &status);
 		MPI_Get_count(&status, MPI_INT, &num);
-		MPI_Recv(temp, num, MPI_INT, 1, 30, MPI_COMM_WORLD, &status);
+		MPI_Recv(temp, num, MPI_INT, status.MPI_SOURCE, 30, MPI_COMM_WORLD, &status);
 		merge__(temp, length, sorted_array, num);
 		length = length + num;
 		ofstream ofs;
-		ofs.open("sorted", ios::out);
+		ofs.open("sorted_array.txt", ios::out);
 		for (int i = 0; i < length; i++)
 		{
 			ofs << temp[i] << " ";
 		}
 		cout << endl << length;
+		cout<<"over";
+		MPI_Abort(MPI_COMM_WORLD, 110);
 	}
+
 	MPI_Finalize();
 }
