@@ -9,7 +9,7 @@
 #include<string.h>
 using namespace std;
 #define TOTAL_SIZE 500000
-#define task_count 1000 //总任务分为10个小包
+#define task_count 1000 //总任务分为多个小包
 #define Size TOTAL_SIZE/task_count  //每个小包的size
 int compare(const void* a, const void* b)
 {
